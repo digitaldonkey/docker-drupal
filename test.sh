@@ -2,7 +2,7 @@
 # Small script to test builds.
 TAG='local'
 CONTAINER_NAME='local_wadmiraal_drupal_test_build'
-DOCKER='sudo docker'
+DOCKER='docker'
 
 EXIT_CODE=0
 echo -e "\e[32mStarting new build...\e[0m"

@@ -1,0 +1,7 @@
+allow_insecure_uploads: false
+default_scheme: public
+path:
+  temporary: /tmp
+  file_private_path: ../files_private
+  file_public_path: ../files_private
+temporary_maximum_age: 21600
