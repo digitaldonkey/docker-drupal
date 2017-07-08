@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  db:
+    image: wodby/mariadb
+    ports:
+      - '3306:3306'
+
+  # https://github.com/sameersbn/docker-apt-cacher-ng
+  #  apt_cacher:
+  #    container_name: drupal_ethereum_apt_cache
+  #    restart: always
+  #    image: sameersbn/apt-cacher-ng:latest
+  #    ports:
+  #      - '3142:3142'
+  #    volumes:
+  #      - ./apt-cacher-ng:/var/cache/apt-cacher-ng
+
+  web:
+    build:
+      context: .
+    depends_on:
+      - db
+    volumes:
+      - ./app/drupal/modules:/var/www/drupal/web/modules/custom
+      - ./app/drupal/themes:/var/www/drupal/web/modules/themes
+      - ./app/drupal/profiles:/var/www/drupal/web/modules/profiles
+      - ./app/drupal/config:/var/www/drupal/config
+    links:
+      - "db:mysql"
+#      - "apt_cacher:apt-cache"
+    ports:
+      - '80:80'
+      - '2222:22'
+    tty: true

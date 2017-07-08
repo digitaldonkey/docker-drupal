@@ -1,7 +1,12 @@
 FROM ubuntu:17.04
 MAINTAINER Thorsten Krug <email@donkeymedia.eu>
 ENV DEBIAN_FRONTEND noninteractive
-ENV DRUPAL_VERSION 8.3.0
+
+ENV MYSQL_ROOT_PASSWORD root
+
+# Cache APT
+# RUN echo 'Acquire::HTTP::Proxy "http://apt_cacher:3142";' >> /etc/apt/apt.conf.d/01proxy && \
+#     echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy
 
 # Install packages.
 RUN  apt-get update &&  apt-get install -y openssh-server \
@@ -26,7 +31,11 @@ RUN  apt-get update &&  apt-get install -y openssh-server \
   php7.0-zip \
   mysql-client \
   php-xdebug \
-  iproute2
+  iproute2 \
+  gcc \
+  xsltproc \
+  make \
+  nodejs
 
 # RUN apt-get install -y \
 # supervisor
@@ -88,15 +97,6 @@ RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
     a2enmod ssl && \
     a2ensite default-ssl.conf
 
-# Setup PHPMyAdmin
-# RUN echo "\n# Include PHPMyAdmin configuration\nInclude /etc/phpmyadmin/apache.conf\n" >> /etc/apache2/apache2.conf
-# RUN sed -i -e "s/\/\/ \$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\]/\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\]/g" /etc/phpmyadmin/config.inc.php
-# RUN sed -i -e "s/\$cfg\['Servers'\]\[\$i\]\['\(table_uiprefs\|history\)'\].*/\$cfg\['Servers'\]\[\$i\]\['\1'\] = false;/g" /etc/phpmyadmin/config.inc.php
-
-# Setup MySQL, bind on all addresses.
-# RUN sed -i -e 's/^bind-address\s*=\s*127.0.0.1/#bind-address = 127.0.0.1/' /etc/mysql/my.cnf
-# OUTDATED? Using now mysql container.
-
 # Setup Supervisor.
 
 # RUN echo '[program:apache2]\ncommand=/bin/bash -c "source /etc/apache2/envvars && exec /usr/sbin/apache2 -DFOREGROUND"\nautorestart=true\n\n' >> /etc/supervisor/supervisord.conf
@@ -110,29 +110,51 @@ RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
 # RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/apache2/conf.d/20-xdebug.ini
 # RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/cli/conf.d/20-xdebug.ini
 
+# NODE & NPM.
+RUN curl -O https://nodejs.org/dist/v8.1.3/node-v8.1.3-linux-x64.tar.xz && \
+    tar xvf node-v8.1.3-linux-x64.tar.xz && \
+    mkdir -p /opt/local/bin && \
+    mv node-v8.1.3-linux-x64 /opt/local && \
+    rm node-v8.1.3-linux-x64.tar.xz && \
+    ln -s /opt/local/node-v8.1.3-linux-x64/bin/npm /opt/local/bin && \
+    ln -s /opt/local/node-v8.1.3-linux-x64/bin/node /opt/local/bin
+
+# KeccakCodePackage for Ethereum keccac256.
+RUN cd /opt/local && \
+    wget https://github.com/gvanas/KeccakCodePackage/archive/master.tar.gz && \
+    tar xvf master.tar.gz && \
+    rm master.tar.gz && \
+    cd KeccakCodePackage-master && \
+    make generic64/KeccakSum && \
+    mv bin/generic64/KeccakSum ../bin/keccac && \
+    rm -rf KeccakCodePackage-master master.tar.gz && \
+    apt-get remove --purge gcc xsltproc make -y
 
 # Add user "drupal"
 RUN rm -rf /var/www && \
     useradd drupal --home-dir /var/www --create-home --user-group --groups www-data --shell /bin/bash && \
     mkdir -p /var/www/tools /var/www/bin && \
-    echo "PATH=/var/www/bin:/var/www/.composer/vendor/bin:$PATH " >> /var/www/.bashrc && \
-    chown -R drupal:drupal /var/www
+    echo "PATH=/var/www/bin:/opt/local/bin:/var/www/.composer/vendor/bin:$PATH " >> /var/www/.bashrc && \
+    chown -R drupal:drupal /var/www && \
+    echo "drupal:drupal" | chpasswd
+
+COPY app/build/ssh/* /var/www/.ssh/
+RUN chmod 700 /var/www/.ssh/ && chown 600 /var/www/.ssh/* && chown -R drupal:drupal /var/www/.ssh/
+
 
 #  Database credentials for user (MariaDB is another container).
-RUN printf '[client] \nuser=root\npassword=root \nhost=mysql \nprotocol=tcp \nport=3306 \n' >> /var/www/.my.cnf
-
+RUN printf "[client] \nuser=root \npassword=$MYSQL_ROOT_PASSWORD \nhost=mysql \nprotocol=tcp \nport=3306 \n" >> /var/www/.my.cnf
 
 # Install Composer.
 RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /var/www/bin/composer
 
 # Install Drush 8.
-# ENV PATH="/var/www/bin:${PATH}"
+ENV PATH="/var/www/bin:${PATH}"
 RUN su drupal -c "/var/www/bin/composer global require drush/drush:8.* && \
                   /var/www/bin/composer global update"
 
-# Install Drupal Console. There are no stable releases yet, so set the minimum
-# stability to dev.
+# Install Drupal Console.
 RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/drupal && chmod +x /var/www/bin/drupal && \
                   /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ && \
                   echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
@@ -140,68 +162,48 @@ RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/dr
 # Install Drupal.
 RUN su drupal -c  "/var/www/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
 
-# We will use composer.json and composer.lock ad provided
+# We will use composer.json and composer.lock as provided.
 COPY app/build/composer.* /var/www/drupal/.
 
 # Scaffold
 COPY app/build/scaffold /var/www/drupal/web/sites
+RUN cd  /var/www/drupal/web/sites/default/ && \
+    cp default.settings.php settings.php && \
+    cp default.services.yml services.yml
 
 RUN cd /var/www && \
-	mkdir drupal/web/modules/contrib -p && \
-	mkdir drupal/web/themes/contrib -p && \
-	mkdir drupal/web/profiles/contrib -p && \
-	chown -R drupal:www-data drupal/web
+  chmod 666 /var/www/drupal/web/sites/default/settings.php /var/www/drupal/web/sites/default/services.yml && \
+  mkdir drupal/files_private -p && \
+  chmod 777 drupal/files_private && \
+  mkdir drupal/web/modules/contrib -p && \
+  mkdir drupal/web/themes/contrib -p && \
+  mkdir drupal/web/profiles/contrib -p && \
+  chown -R drupal:www-data drupal/web
 
-# 	cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
-# 	cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
+#   cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
+#   cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
+#   cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
+#   cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
+#   chmod 0664 /var/www/sites/default/settings.php && \
+#   chmod 0664 /var/www/sites/default/services.yml && \
 
-# --prefer-dist ??
-
-# RUN su drupal -c "/var/www/bin/composer install --working-dir  /var/www/drupal --no-autoloader"
-# RUN su drupal -c "/var/www/bin/composer dump-autoload --working-dir /var/www/drupal --optimize"
 RUN su drupal -c "/var/www/bin/composer install --working-dir /var/www/drupal"
 
-# RESOLVE HOSTNAME FROM /etc/hosts don't work. That'y why awk-ward.
-RUN su drupal -c "/usr/bin/mysql -h $(/sbin/ip route|awk '/default/ { print $3 }')  --execute='CREATE DATABASE IF NOT EXISTS drupal;'"
+# RUN su drupal -c "/usr/bin/mysql -h 172.17.0.1 --execute='CREATE DATABASE IF NOT EXISTS drupal;'"
+
+COPY app/run/ /var/www/scripts/
+RUN chown -R drupal:drupal /var/www/scripts/ && \
+    chmod 700 /var/www/scripts/*
 
 
-RUN su drupal -c "/var/www/.composer/vendor/bin/drush site-install standard -y --root=/var/www/drupal/web --db-url='mysql://root:root@$(/sbin/ip route|awk '/default/ { print $3 }'):3306/drupal' --account-name='tho' --account-pass='password' --site-name='drupal-ethereum' --account-mail='email@donkeymedia.eu' --site-mail='email@donkeymedia.eu' --notify='global'"
-RUN su drupal -c "/var/www/.composer/vendor/bin/drush config-import --root=/var/www/drupal/web --partial -y"
 
 
-# RUN cd /var && \
-# 	drush dl drupal-$DRUPAL_VERSION && \
-# 	mv /var/drupal* /var/www
-# RUN mkdir -p /var/www/sites/default/files && \
-# 	chmod a+w /var/www/sites/default -R && \
-# 	mkdir /var/www/sites/all/modules/contrib -p && \
-# 	mkdir /var/www/sites/all/modules/custom && \
-# 	mkdir /var/www/sites/all/themes/contrib -p && \
-# 	mkdir /var/www/sites/all/themes/custom && \
-# 	cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
-# 	cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
-# 	chmod 0664 /var/www/sites/default/settings.php && \
-# 	chmod 0664 /var/www/sites/default/services.yml && \
-# 	chown -R www-data:www-data /var/www/
-# RUN /etc/init.d/mysql start && \
-# 	cd /var/www && \
-# 	drush si -y standard --db-url=mysql://root:@localhost/drupal --account-pass=admin && \
-# 	drush dl admin_menu devel && \
+# RUN su drupal -c "/var/www/.composer/vendor/bin/drush site-install standard -y --root=/var/www/drupal/web --db-url='mysql://root:root@db:3306/drupal' --account-name='admin' --account-pass='password' --site-name='drupal-ethereum' --account-mail='email@donkeymedia.eu' --site-mail='email@donkeymedia.eu' --notify='global'"
 
-	# In order to enable Simpletest, we need to download PHPUnit.
+# RUN su drupal -c "/var/www/.composer/vendor/bin/drush config-import --root=/var/www/drupal/web --partial -y"
 
-# 	composer install --dev && \
-# 	# Admin Menu is broken. See https://www.drupal.org/node/2563867 for more info.
-# 	# As long as it is not fixed, only enable simpletest and devel.
-# 	# drush en -y admin_menu simpletest devel
-# 	drush en -y simpletest devel && \
-# 	drush en -y bartik
-# RUN /etc/init.d/mysql start && \
-# 	cd /var/www && \
-# 	drush cset system.theme default 'bartik' -y
-
+# In order to enable Simpletest, we need to download PHPUnit.
 # Allow Kernel and Browser tests to be run via PHPUnit.
-
 # RUN sed -i 's/name="SIMPLETEST_DB" value=""/name="SIMPLETEST_DB" value="sqlite:\/\/localhost\/tmp\/db.sqlite"/' /var/www/core/phpunit.xml.dist
 
 # USER root
@@ -214,4 +216,5 @@ EXPOSE 80 22 443
 ENTRYPOINT chown -R drupal:www-data /var/www/drupal/web && \
            service ssh restart && \
            service apache2 start && \
+           su drupal /var/www/scripts/install-drupal.sh && \
            bash
