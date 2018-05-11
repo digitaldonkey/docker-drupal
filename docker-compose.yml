@@ -5,7 +5,8 @@ services:
     image: wodby/mariadb
     ports:
       - '3306:3306'
-
+    env_file:
+      - database.env
   # https://github.com/sameersbn/docker-apt-cacher-ng
   #  apt_cacher:
   #    container_name: drupal_ethereum_apt_cache
@@ -19,6 +20,8 @@ services:
   web:
     build:
       context: .
+    env_file:
+      - drupal.env
     depends_on:
       - db
     volumes:

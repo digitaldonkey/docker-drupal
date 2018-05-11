@@ -1,4 +1,4 @@
-FROM ubuntu:17.04
+FROM ubuntu:17.10
 MAINTAINER Thorsten Krug <email@donkeymedia.eu>
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -9,7 +9,9 @@ ENV MYSQL_ROOT_PASSWORD root
 #     echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy
 
 # Install packages.
-RUN  apt-get update &&  apt-get install -y openssh-server \
+RUN  apt-get update &&  apt-get install -y \
+  openssh-server \
+  openssl \
   vim \
   wget \
   git \
@@ -17,25 +19,24 @@ RUN  apt-get update &&  apt-get install -y openssh-server \
   cron \
   curl \
   apache2 \
-  php7.0 \
-  libapache2-mod-php7.0 \
-  php7.0-cli \
-  php7.0-common \
-  php7.0-mbstring \
-  php7.0-gd \
-  php7.0-imagick \
-  php7.0-intl \
-  php7.0-xml \
-  php7.0-mysql \
-  php7.0-mcrypt \
-  php7.0-zip \
+  php \
+  libapache2-mod-php \
+  php-cli \
+  php-common \
+  php-mbstring \
+  php-gd \
+  php-imagick \
+  php-intl \
+  php-xml \
+  php-mysql \
+  php-mcrypt \
+  php-zip \
   mysql-client \
   php-xdebug \
   iproute2 \
   gcc \
   xsltproc \
-  make \
-  nodejs
+  make
 
 # RUN apt-get install -y \
 # supervisor
@@ -54,7 +55,7 @@ RUN echo "root:root" | chpasswd && \
 
 # Setup PHP.
 
-# RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php/7.0/apache2/php.ini
+# RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php/apache2/php.ini
 # RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php5/cli/php.ini
 
 # Setup Blackfire.
@@ -111,13 +112,13 @@ RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
 # RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/cli/conf.d/20-xdebug.ini
 
 # NODE & NPM.
-RUN curl -O https://nodejs.org/dist/v8.1.3/node-v8.1.3-linux-x64.tar.xz && \
-    tar xvf node-v8.1.3-linux-x64.tar.xz && \
+RUN curl -O https://nodejs.org/dist/latest-carbon/node-v8.11.1-linux-x64.tar.xz && \
+    tar xvf node-v8.11.1-linux-x64.tar.xz && \
     mkdir -p /opt/local/bin && \
-    mv node-v8.1.3-linux-x64 /opt/local && \
-    rm node-v8.1.3-linux-x64.tar.xz && \
-    ln -s /opt/local/node-v8.1.3-linux-x64/bin/npm /opt/local/bin && \
-    ln -s /opt/local/node-v8.1.3-linux-x64/bin/node /opt/local/bin
+    mv node-v8.11.1-linux-x64 /opt/local && \
+    rm node-v8.11.1-linux-x64.tar.xz && \
+    ln -s /opt/local/node-v8.11.1-linux-x64/bin/npm /opt/local/bin && \
+    ln -s /opt/local/node-v8.11.1-linux-x64/bin/node /opt/local/bin
 
 # KeccakCodePackage for Ethereum keccac256.
 RUN cd /opt/local && \
