@@ -6,7 +6,7 @@ services:
     ports:
       - '3306:3306'
     env_file:
-      - database.env
+      - default.env
   # https://github.com/sameersbn/docker-apt-cacher-ng
   #  apt_cacher:
   #    container_name: drupal_ethereum_apt_cache
@@ -21,7 +21,7 @@ services:
     build:
       context: .
     env_file:
-      - drupal.env
+      - default.env
     depends_on:
       - db
     volumes:

@@ -1,42 +1,37 @@
 # Drupal Ethereum Docker
 
-## Manual
-
-Start Docker
+## Start Docker
 
 ```
   docker-machine start
   eval $(docker-machine env default)
 ```
 
-# Build image
+## Build and run
 
 ```
-docker build -t drupal_ethereum .
+docker-compose build
+docker-compose up
 ```
 
-# Start DB
+## Log-in
 
-```
-docker run --name drupal_ethereum_db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mariadb
-```
-
-# Run Image
-```
-docker run --rm \
-   --name drupal_ethereum_zesty \
-   -p 80:80 -p 2222:22 \
-   -v `pwd`/app/modules:/var/www/drupal/web/modules/custom \
-   -v `pwd`/app/themes:/var/www/drupal/web/themes/custom \
-   -v `pwd`/app/profiles:/var/www/drupal/web/profiles/custom \
-   -v `pwd`/app/config:/var/www/drupal/config \
-   --link drupal_ethereum_db:mysql \
-   -t drupal_ethereum_zesty
-```
-
-# Log-in
+Root Password is "root"
 
 ```
 ssh root@dockerhost -p2222
+```
+
+Drupal system user has the Password "drupal"
+
+```
 ssh drupal@dockerhost -p2222
+```
+
+Drupal web password is is set via *.env* file. 
+See default.env
+
+```
+DRUPAL_ACCOUNT_NAME=admin
+DRUPAL_ACCOUNT_PASS=password
 ```

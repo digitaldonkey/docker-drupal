@@ -36,12 +36,11 @@ RUN  apt-get update &&  apt-get install -y \
   iproute2 \
   gcc \
   xsltproc \
+  nodejs \
+  npm \
   make
 
-# RUN apt-get install -y \
-# supervisor
-# phpmyadmin
-
+# NOTE: nodejs and npm are just required to compile ecrecover.
 
 RUN apt-get clean
 
@@ -157,8 +156,27 @@ RUN su drupal -c "/var/www/bin/composer global require drush/drush:8.* && \
 
 # Install Drupal Console.
 RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/drupal && chmod +x /var/www/bin/drupal && \
-                  /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ && \
+                  /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
                   echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
+
+# Command line base ecrecover as a temporary solution.
+RUN cd /opt/local && \
+    wget https://github.com/digitaldonkey/secp256k1-bash/archive/master.tar.gz && \
+    tar xvf master.tar.gz && \
+    rm master.tar.gz && \
+    cd secp256k1-bash-master && \
+    chown -R root:drupal /opt/local/secp256k1-bash-master && \
+    /opt/local/bin/npm install && \
+    su drupal -c  "cd /opt/local/secp256k1-bash-master && /opt/local/bin/npm i" && \
+    ln -s /opt/local/secp256k1-bash-master/ecrecover.sh /opt/local/bin/ecrecover
+
+# Command line base ecrecover as a temporary solution.
+# RUN su drupal -c  "cd /opt/local/secp256k1-bash-master && /opt/local/bin/npm i"
+
+# su drupal -c  "/opt/local/bin/npm install" && \
+#     ln -s /opt/local/secp256k1-bash-master/ecrecover.sh /opt/local/bin/ecrecover
+
+
 
 # Install Drupal.
 RUN su drupal -c  "/var/www/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
@@ -181,13 +199,6 @@ RUN cd /var/www && \
   mkdir drupal/web/profiles/contrib -p && \
   chown -R drupal:www-data drupal/web
 
-#   cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
-#   cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
-#   cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php && \
-#   cp /var/www/sites/default/default.services.yml /var/www/sites/default/services.yml && \
-#   chmod 0664 /var/www/sites/default/settings.php && \
-#   chmod 0664 /var/www/sites/default/services.yml && \
-
 RUN su drupal -c "/var/www/bin/composer install --working-dir /var/www/drupal"
 
 # RUN su drupal -c "/usr/bin/mysql -h 172.17.0.1 --execute='CREATE DATABASE IF NOT EXISTS drupal;'"
@@ -196,24 +207,11 @@ COPY app/run/ /var/www/scripts/
 RUN chown -R drupal:drupal /var/www/scripts/ && \
     chmod 700 /var/www/scripts/*
 
-
-
-
-# RUN su drupal -c "/var/www/.composer/vendor/bin/drush site-install standard -y --root=/var/www/drupal/web --db-url='mysql://root:root@db:3306/drupal' --account-name='admin' --account-pass='password' --site-name='drupal-ethereum' --account-mail='email@donkeymedia.eu' --site-mail='email@donkeymedia.eu' --notify='global'"
-
-# RUN su drupal -c "/var/www/.composer/vendor/bin/drush config-import --root=/var/www/drupal/web --partial -y"
-
-# In order to enable Simpletest, we need to download PHPUnit.
-# Allow Kernel and Browser tests to be run via PHPUnit.
-# RUN sed -i 's/name="SIMPLETEST_DB" value=""/name="SIMPLETEST_DB" value="sqlite:\/\/localhost\/tmp\/db.sqlite"/' /var/www/core/phpunit.xml.dist
-
-# USER root
-
 EXPOSE 80 22 443
 
 # CMD exec supervisord -n
+COPY default.env /var/www/drupal/.env
 
-# ENTRYPOINT service ssh restart && service apache2 start && bash
 ENTRYPOINT chown -R drupal:www-data /var/www/drupal/web && \
            service ssh restart && \
            service apache2 start && \
