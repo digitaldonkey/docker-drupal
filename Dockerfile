@@ -1,48 +1,126 @@
-FROM ubuntu:17.10
+FROM php:7.2-apache
 MAINTAINER Thorsten Krug <email@donkeymedia.eu>
+
 ENV DEBIAN_FRONTEND noninteractive
 
-ENV MYSQL_ROOT_PASSWORD root
+ARG APACHE_DOCUMENT_ROOT=/var/www/drupal/web/
+ENV APACHE_DOCUMENT_ROOT=$APACHE_DOCUMENT_ROOT
 
-# Cache APT
-# RUN echo 'Acquire::HTTP::Proxy "http://apt_cacher:3142";' >> /etc/apt/apt.conf.d/01proxy && \
-#     echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy
+# Add node 8.x repo.
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+# RUN  curl -sL https://deb.nodesource.com/setup_8.x | bash -
 
-# Install packages.
-RUN  apt-get update &&  apt-get install -y \
-  openssh-server \
-  openssl \
-  vim \
-  wget \
-  git \
-  sed \
-  cron \
-  curl \
-  apache2 \
-  php \
-  libapache2-mod-php \
-  php-cli \
-  php-common \
-  php-mbstring \
-  php-gd \
-  php-imagick \
-  php-intl \
-  php-xml \
-  php-mysql \
-  php-mcrypt \
-  php-zip \
-  mysql-client \
-  php-xdebug \
-  iproute2 \
-  gcc \
-  xsltproc \
-  nodejs \
-  npm \
-  make
 
-# NOTE: nodejs and npm are just required to compile ecrecover.
+# Install PHP extensions and PECL modules.
+RUN buildDeps=" \
+        default-libmysqlclient-dev \
+        libbz2-dev \
+        libmemcached-dev \
+        libsasl2-dev \
+        make \
+        xsltproc \
+    " \
+    runtimeDeps=" \
+        zip \
+        curl \
+        ca-certificates \
+        openssh-server \
+        openssl \
+        ssl-cert \
+        vim \
+        wget \
+        git \
+        sed \
+        cron \
+        mysql-client \
+        libfreetype6-dev \
+        libicu-dev \
+        libjpeg-dev \
+        libldap2-dev \
+        libmemcachedutil2 \
+        libpng-dev \
+        libpq-dev \
+        libxml2-dev \
+        libzip-dev \
+        libgmp-dev \
+    " \
+    && ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/local/include/ \
+    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y $buildDeps $runtimeDeps \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    && docker-php-ext-configure zip --with-libzip \
+    && docker-php-ext-configure gmp \
+    && docker-php-ext-install  -j$(nproc) gd ldap zip exif gmp bcmath bz2 calendar intl mysqli opcache pdo_mysql pdo_pgsql pgsql soap \
+    && pecl install memcached redis \
+    && docker-php-ext-enable memcached.so redis.so \
+    && apt-get purge -y --auto-remove $buildDeps \
+    && rm -r /var/lib/apt/lists/* \
+    && a2enmod rewrite
 
-RUN apt-get clean
+
+# Install some extensions
+# @see https://hub.docker.com/r/_/php/ 'How to install more PHP extensions'
+# RUN apt-get update && apt-get install -y \
+#         libfreetype6-dev \
+#         libjpeg62-turbo-dev \
+#         libmcrypt-dev \
+#         libpng-dev \
+#         libgmp-dev \
+#         libzip-dev \
+#         libxml2-dev \
+#         re2c libmhash-dev \
+#         libmcrypt-dev \
+#         file \
+#         zlib1g-dev \
+#         zip \
+#         curl \
+#         ca-certificates \
+#         openssh-server \
+#         openssl \
+#         vim \
+#         wget \
+#         git \
+#         sed \
+#         cron \
+#         mysql-client \
+#         make \
+#         xsltproc \
+#     && ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/local/include/ \
+#     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+#     && docker-php-ext-configure gmp \
+#     && docker-php-ext-configure xml --with-libxml \
+#     && docker-php-ext-configure zip --with-libzip \
+#     && docker-php-ext-install -j$(nproc) gd \
+#     && docker-php-ext-install -j$(nproc) zip \
+#     && docker-php-ext-install -j$(nproc) gettext \
+#     && docker-php-ext-install -j$(nproc) opcache \
+#     && docker-php-ext-install -j$(nproc) xml \
+#     && docker-php-ext-install -j$(nproc) xmlreader \
+#     && docker-php-ext-install -j$(nproc) xsl \
+#     && docker-php-ext-install -j$(nproc) mbstring \
+#     && docker-php-ext-install -j$(nproc) pdo_mysql \
+#     && docker-php-ext-install -j$(nproc) gmp \
+
+# RUN apt-get clean
+
+
+# KeccakCodePackage for Ethereum keccac256.
+# RUN mkdir -p /opt/local/bin && \
+#     cd /opt/local && \
+#     wget https://github.com/gvanas/KeccakCodePackage/archive/master.tar.gz && \
+#     tar xvf master.tar.gz && \
+#     rm master.tar.gz && \
+#     cd KeccakCodePackage-master && \
+#     make generic64/KeccakSum && \
+#     mv bin/generic64/KeccakSum ../bin/keccac && \
+#     rm -rf KeccakCodePackage-master master.tar.gz && \
+#     apt-get remove --purge gcc xsltproc make -y
+
+
+# Link Composer
+# @see https://github.com/docker-library/php/issues/344#issuecomment-364843883
+COPY --from=composer:1.5 /usr/bin/composer /usr/bin/composer
+
 
 # Setup SSH.
 RUN echo "root:root" | chpasswd && \
@@ -84,18 +162,32 @@ RUN echo "root:root" | chpasswd && \
 # In order to run our Simpletest tests, we need to make Apache
 # listen on the same port as the one we forwarded. Because we use
 # 8080 by default, we set it up for that port.
+
+RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
+RUN sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# CHerryPick
 RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
     sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf && \
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/drupal\/web/' /etc/apache2/sites-available/000-default.conf && \
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/drupal\/web/' /etc/apache2/sites-available/default-ssl.conf && \
     echo "Listen 8080" >> /etc/apache2/ports.conf && \
     echo "Listen 8081" >> /etc/apache2/ports.conf && \
     echo "Listen 8443" >> /etc/apache2/ports.conf && \
-    sed -i 's/VirtualHost \*:80/VirtualHost \*:\*/' /etc/apache2/sites-available/000-default.conf && \
-    sed -i 's/VirtualHost _default_:443/VirtualHost _default_:443 _default_:8443/' /etc/apache2/sites-available/default-ssl.conf && \
+#     sed -i 's/VirtualHost _default_:443/VirtualHost _default_:443 _default_:8443/' /etc/apache2/sites-available/default-ssl.conf && \
     a2enmod rewrite && \
     a2enmod ssl && \
     a2ensite default-ssl.conf
+
+
+# OLD
+# RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
+#     sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf && \
+#     sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
+#     sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf && \
+#     sed -i 's/VirtualHost \*:80/VirtualHost \*:\*/' /etc/apache2/sites-available/000-default.conf && \
+#     sed -i 's/VirtualHost _default_:443/VirtualHost _default_:443 _default_:8443/' /etc/apache2/sites-available/default-ssl.conf && \
+#     a2enmod rewrite && \
+#     a2enmod ssl && \
+#     a2ensite default-ssl.conf
 
 # Setup Supervisor.
 
@@ -111,24 +203,20 @@ RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
 # RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/cli/conf.d/20-xdebug.ini
 
 # NODE & NPM.
-RUN curl -O https://nodejs.org/dist/latest-carbon/node-v8.11.1-linux-x64.tar.xz && \
-    tar xvf node-v8.11.1-linux-x64.tar.xz && \
-    mkdir -p /opt/local/bin && \
-    mv node-v8.11.1-linux-x64 /opt/local && \
-    rm node-v8.11.1-linux-x64.tar.xz && \
-    ln -s /opt/local/node-v8.11.1-linux-x64/bin/npm /opt/local/bin && \
-    ln -s /opt/local/node-v8.11.1-linux-x64/bin/node /opt/local/bin
 
-# KeccakCodePackage for Ethereum keccac256.
-RUN cd /opt/local && \
-    wget https://github.com/gvanas/KeccakCodePackage/archive/master.tar.gz && \
-    tar xvf master.tar.gz && \
-    rm master.tar.gz && \
-    cd KeccakCodePackage-master && \
-    make generic64/KeccakSum && \
-    mv bin/generic64/KeccakSum ../bin/keccac && \
-    rm -rf KeccakCodePackage-master master.tar.gz && \
-    apt-get remove --purge gcc xsltproc make -y
+# @todo REPLACE WITH
+# curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+# sudo apt-get install -y nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+#
+# RUN curl -O https://nodejs.org/dist/latest-carbon/node-v8.11.2-linux-x64.tar.xz && \
+#     tar xvf node-v8.11.2-linux-x64.tar.xz && \
+#     mkdir -p /opt/local/bin && \
+#     mv node-v8.11.2-linux-x64 /opt/local && \
+#     rm node-v8.11.2-linux-x64.tar.xz && \
+#     ln -s /opt/local/node-v8.11.2-linux-x64/bin/npm /opt/local/bin && \
+#     ln -s /opt/local/node-v8.11.2-linux-x64/bin/node /opt/local/bin
+
 
 # Add user "drupal"
 RUN rm -rf /var/www && \
@@ -146,40 +234,29 @@ RUN chmod 700 /var/www/.ssh/ && chown 600 /var/www/.ssh/* && chown -R drupal:dru
 RUN printf "[client] \nuser=root \npassword=$MYSQL_ROOT_PASSWORD \nhost=mysql \nprotocol=tcp \nport=3306 \n" >> /var/www/.my.cnf
 
 # Install Composer.
-RUN curl -sS https://getcomposer.org/installer | php && \
-    mv composer.phar /var/www/bin/composer
+# RUN curl -sS https://getcomposer.org/installer | php && \
+#     mv composer.phar /usr/bin/composer
 
 # Install Drush 8.
 ENV PATH="/var/www/bin:${PATH}"
-RUN su drupal -c "/var/www/bin/composer global require drush/drush:8.* && \
-                  /var/www/bin/composer global update"
+
+RUN mkdir -p $APACHE_DOCUMENT_ROOT && echo "<?php phpinfo(); " >> "${APACHE_DOCUMENT_ROOT}index.php"
+
+# Composer speedup.
+# RUN su drupal -c "/usr/bin/composer global require hirak/prestissimo \
+#                   && /usr/bin/composer global require drush/drush:8.*"
 
 # Install Drupal Console.
-RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/drupal && chmod +x /var/www/bin/drupal && \
-                  /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
-                  echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
+# RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/drupal && chmod +x /var/www/bin/drupal && \
+#                   /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
+#                   echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
 
-# Command line base ecrecover as a temporary solution.
-RUN cd /opt/local && \
-    wget https://github.com/digitaldonkey/secp256k1-bash/archive/master.tar.gz && \
-    tar xvf master.tar.gz && \
-    rm master.tar.gz && \
-    cd secp256k1-bash-master && \
-    chown -R root:drupal /opt/local/secp256k1-bash-master && \
-    /opt/local/bin/npm install && \
-    su drupal -c  "cd /opt/local/secp256k1-bash-master && /opt/local/bin/npm i" && \
-    ln -s /opt/local/secp256k1-bash-master/ecrecover.sh /opt/local/bin/ecrecover
-
-# Command line base ecrecover as a temporary solution.
-# RUN su drupal -c  "cd /opt/local/secp256k1-bash-master && /opt/local/bin/npm i"
-
-# su drupal -c  "/opt/local/bin/npm install" && \
-#     ln -s /opt/local/secp256k1-bash-master/ecrecover.sh /opt/local/bin/ecrecover
-
+# RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# RUN apt-get install nodejs
 
 
 # Install Drupal.
-RUN su drupal -c  "/var/www/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
+# RUN su drupal -c  "/usr/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
 
 # We will use composer.json and composer.lock as provided.
 COPY app/build/composer.* /var/www/drupal/.
@@ -199,13 +276,11 @@ RUN cd /var/www && \
   mkdir drupal/web/profiles/contrib -p && \
   chown -R drupal:www-data drupal/web
 
-RUN su drupal -c "/var/www/bin/composer install --working-dir /var/www/drupal"
+# RUN su drupal -c "/usr/bin/composer install --working-dir /var/www/drupal"
 
-# RUN su drupal -c "/usr/bin/mysql -h 172.17.0.1 --execute='CREATE DATABASE IF NOT EXISTS drupal;'"
-
-COPY app/run/ /var/www/scripts/
-RUN chown -R drupal:drupal /var/www/scripts/ && \
-    chmod 700 /var/www/scripts/*
+# COPY app/run/ /var/www/scripts/
+# RUN chown -R drupal:drupal /var/www/scripts/ && \
+#     chmod 700 /var/www/scripts/*
 
 EXPOSE 80 22 443
 
@@ -215,5 +290,5 @@ COPY default.env /var/www/drupal/.env
 ENTRYPOINT chown -R drupal:www-data /var/www/drupal/web && \
            service ssh restart && \
            service apache2 start && \
-           su drupal /var/www/scripts/install-drupal.sh && \
+#            su drupal /var/www/scripts/install-drupal.sh && \
            bash

@@ -20,6 +20,8 @@ services:
   web:
     build:
       context: .
+    environment:
+    - APACHE_DOCUMENT_ROOT=/var/www/drupal/web/
     env_file:
       - default.env
     depends_on:
