@@ -194,9 +194,10 @@ RUN su drupal -c "/usr/bin/composer global require hirak/prestissimo \
                   && /usr/bin/composer global require drush/drush:8.*"
 
 # Install Drupal Console.
-# RUN su drupal -c "curl https://drupalconsole.com/installer -L -o /var/www/bin/drupal && chmod +x /var/www/bin/drupal && \
-#                   /var/www/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
-#                   echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
+RUN curl https://drupalconsole.com/installer -L -o /usr/bin/drupal && \
+    chmod +x /usr/bin/drupal && \
+    su drupal -c "/usr/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
+    echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
 
 
 # Composer install for Drupal.
