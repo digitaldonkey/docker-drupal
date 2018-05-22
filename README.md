@@ -1,5 +1,12 @@
 # Drupal Ethereum Docker
 
+You can run three flavors by changing `BUILD_ENVIRONMENT`
+
+* dev    - latest dev version from Guthub
+* stable - branch 8.x from drupal.org
+* example - latest dev version from Guthub with some Drupal config
+
+
 ## Start Docker
 
 ```
@@ -9,29 +16,36 @@
 
 ## Build and run
 
+The single source of variables is the *.env* file. 
+Copy default.env and change your settings there. 
+
+```
+cp default.env .env
+```
+
+
+Start up containers
+
 ```
 docker-compose build
 docker-compose up
 ```
+Visit [http://dockerhost:8888](http://dockerhost:8888) or [https://dockerhost:8889](https://dockerhost:8889).
+
+Not that if you change `MYSQL_ROOT_PASSWORD` after first `docker-composer up` run you may need to recreate the Database server (`docker-compose rm -v`). 
+
+https://staxmanade.com/2016/05/how-to-get-environment-variables-passed-through-docker-compose-to-the-containers/
 
 ## Log-in
 
-Root Password is "root"
+All passwords are set via *.env* file. 
+
+System accounts have no passwords. You need to change **app/ssh/authorized_keys** in order to log in.
 
 ```
 ssh root@dockerhost -p2222
 ```
 
-Drupal system user has the Password "drupal"
-
 ```
 ssh drupal@dockerhost -p2222
-```
-
-Drupal web password is is set via *.env* file. 
-See default.env
-
-```
-DRUPAL_ACCOUNT_NAME=admin
-DRUPAL_ACCOUNT_PASS=password
 ```
