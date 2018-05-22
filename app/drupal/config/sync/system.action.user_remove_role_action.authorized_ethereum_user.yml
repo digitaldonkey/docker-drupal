@@ -1,0 +1,14 @@
+uuid: 8c3153c8-85dc-46fb-81ad-535a5436de83
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.authorized_ethereum_user
+  module:
+    - user
+id: user_remove_role_action.authorized_ethereum_user
+label: 'Remove the Authorized Ethereum User role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: authorized_ethereum_user

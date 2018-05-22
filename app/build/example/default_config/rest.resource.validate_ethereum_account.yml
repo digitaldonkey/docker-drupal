@@ -1,0 +1,19 @@
+uuid: f5462b1b-2485-49f5-a1b1-90067e451d78
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_user_connector
+    - serialization
+    - user
+_core:
+  default_config_hash: 7PFB832-sBrIaY5BN3nqfgqqkGjVm_FaQ7vwwMIFEhU
+id: validate_ethereum_account
+plugin_id: validate_ethereum_account
+granularity: method
+configuration:
+  GET:
+    supported_formats:
+      - json
+    supported_auth:
+      - cookie

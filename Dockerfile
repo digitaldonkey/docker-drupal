@@ -106,12 +106,12 @@ COPY --from=composer:1.5 /usr/bin/composer /usr/bin/composer
 
 
 # Setup SSH.
-# Both users (root, drupal) are only allowed to login with key in app/build/ssh/authorized_keys.
+# Both users (root, drupal) are only allowed to login with key in app/ssh/authorized_keys.
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin without-password/' /etc/ssh/sshd_config && \
     mkdir /var/run/sshd && chmod 0755 /var/run/sshd && \
     mkdir -p /root/.ssh/ &&  chmod 700 /root/.ssh/ && \
     sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-COPY app/build/ssh/* /root/.ssh/
+COPY app/ssh/* /root/.ssh/
 RUN chown root:root /root/.ssh/* && chmod 600 /root/.ssh/*
 
 
@@ -177,11 +177,11 @@ RUN rm -rf /var/www && \
     useradd drupal --home-dir /var/www --create-home --user-group --groups www-data --shell /bin/bash && \
     sed -i "s/#alias ll='ls -l'/alias ll='ls -l'/" /var/www/.bashrc && \
     mkdir -p /var/www/tools && \
-    echo "PATH=/opt/local/bin:/var/www/.composer/vendor/bin:$PATH " >> /var/www/.bashrc && \
+    echo "PATH=/var/www/drupal/vendor/bin:/opt/local/bin:/var/www/.composer/vendor/bin:$PATH " >> /var/www/.bashrc && \
     chown -R drupal:drupal /var/www
 
 # SSH keys
-COPY app/build/ssh/* /var/www/.ssh/
+COPY app/ssh/* /var/www/.ssh/
 RUN chmod 700 /var/www/.ssh/ && chown 600 /var/www/.ssh/* && chown -R drupal:drupal /var/www/.ssh/
 
 
@@ -190,51 +190,56 @@ RUN printf "[client] \nuser=root \npassword=$MYSQL_ROOT_PASSWORD \nhost=mysql \n
 
 
 # Composer speedup.
-RUN su drupal -c "/usr/bin/composer global require hirak/prestissimo \
-                  && /usr/bin/composer global require drush/drush:8.*"
+RUN su drupal -c "/usr/bin/composer global require hirak/prestissimo"
 
 # Install Drupal Console.
-RUN curl https://drupalconsole.com/installer -L -o /usr/bin/drupal && \
-    chmod +x /usr/bin/drupal && \
-    su drupal -c "/usr/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
-    echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
-
+# RUN curl https://drupalconsole.com/installer -L -o /usr/bin/drupal && \
+#     chmod +x /usr/bin/drupal && \
+#     su drupal -c "/usr/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
+#     echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
+# Not working ?
+# Should use: /var/www/drupal/vendor/bin/drupal
+# https://github.com/hechoendrupal/drupal-console/issues/3255#issuecomment-292556584
 
 # Composer install for Drupal.
 RUN su drupal -c  "/usr/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
 
 # We will use composer.json and composer.lock as provided.
-COPY app/build/composer.* /var/www/drupal/.
+RUN echo "USING ENVIRONMENT ${BUILD_ENVIRONMENT}" && touch /var/www/drupal/build-env--${BUILD_ENVIRONMENT}
+COPY app/build/${BUILD_ENVIRONMENT}/composer.* /var/www/drupal/.
 
 # Scaffold
-COPY app/build/scaffold /var/www/drupal/web/sites
+COPY app/scaffold /var/www/drupal/web/sites
 RUN cd  /var/www/drupal/web/sites/default/ && \
     cp default.settings.php settings.php && \
-    cp default.services.yml services.yml
+    cp default.services.yml services.yml && \
+    cd  /var/www && \
+    mkdir drupal/files_private -p && \
+    mkdir drupal/web/modules/contrib -p && \
+    mkdir drupal/config/sync -p && \
+    mkdir drupal/web/themes/contrib -p && \
+    mkdir drupal/web/profiles/contrib -p
 
+# Copy config
+COPY app/build/${BUILD_ENVIRONMENT}/default_config /var/www/drupal/default_config
+
+# Set up permissions
 RUN cd /var/www && \
   chown -R drupal:www-data drupal/web/sites/default && \
   find drupal/web/sites/default -type d -exec chmod 775 {} + && \
   chmod 644 drupal/web/sites/default/settings.php && \
   chmod 644 drupal/web/sites/default/services.yml  &&\
-  mkdir drupal/files_private -p && \
-  mkdir drupal/web/modules/contrib -p && \
-  mkdir drupal/config/sync -p && \
-  mkdir drupal/web/themes/contrib -p && \
-  mkdir drupal/web/profiles/contrib -p && \
   chown -R drupal:drupal drupal && \
   chown -R drupal:www-data drupal/web && \
   chown -R drupal:www-data drupal/files_private && \
-  chown -R drupal:www-data drupal/config && \
-  chmod 775 drupal/files_private && \
-  chmod -R 775 drupal/config
+  chmod 775 drupal/files_private
 
+RUN su drupal -c '/usr/bin/composer install --working-dir /var/www/drupal'
 
-RUN su drupal -c "/usr/bin/composer install --working-dir /var/www/drupal "
+RUN su drupal -c '/var/www/drupal/vendor/bin/drupal init --yes --no-interaction --root=/var/www/drupal/web --destination /var/www/.console/ --autocomplete --override'
 
 # Add phpinfo() file.
 RUN su drupal -c "echo '<?php phpinfo();' > ${APACHE_DOCUMENT_ROOT}phpinfo.php"
-
 
 COPY app/run/ /var/www/scripts/
 RUN chown -R drupal:drupal /var/www/scripts/ && \
@@ -247,5 +252,5 @@ COPY default.env /var/www/drupal/.env
 
 ENTRYPOINT service ssh restart && \
            service apache2 start && \
-           su drupal /var/www/scripts/install-drupal.sh && \
+           /var/www/scripts/install-drupal.sh && \
            bash

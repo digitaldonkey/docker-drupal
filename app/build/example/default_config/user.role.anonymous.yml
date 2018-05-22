@@ -1,0 +1,18 @@
+uuid: ebb57b81-b388-4018-951b-5c950cdcff17
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: j5zLMOdJBqC0bMvSdth5UebkprJB8g_2FXHqhfpJzow
+id: anonymous
+label: 'Anonymous user'
+weight: 0
+is_admin: false
+permissions:
+  - 'access comments'
+  - 'access content'
+  - 'access site-wide contact form'
+  - 'restful post ethereum_signup_auth'
+  - 'restful post ethereum_signup_verify'
+  - 'search content'
+  - 'use text format restricted_html'

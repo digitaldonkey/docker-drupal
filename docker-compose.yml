@@ -14,8 +14,8 @@ services:
     build:
       context: .
       args:
-      - MYSQL_ROOT_PASSWORD=root
-      - BUILD_ENVIRONMENT=dev
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT}
     env_file:
       - default.env
     depends_on:

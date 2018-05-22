@@ -1,0 +1,11 @@
+uuid: 11d40c3a-1e13-41f0-b233-04d1e93f1cba
+langcode: en
+status: false
+dependencies: {  }
+_core:
+  default_config_hash: KrW7XXNlHSeyAVMPnd-qbEGRroKDVZq0IFolanWMYPs
+id: infura_mainnet
+label: 'Infura Main Ethereum Node'
+description: 'Infura (https://www.infura.io) provides access to Ethereum Nodes, so that you don''t require to host you own.'
+url: 'https://mainnet.infura.io/drupal'
+network_id: '1'

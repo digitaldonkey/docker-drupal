@@ -1,0 +1,21 @@
+uuid: cb137710-8760-4c73-b28c-11441207471d
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: dJ0L2DNSj5q6XVZAGsuVDpJTh5UeYkIPwKrUOOpr8YI
+id: authenticated
+label: 'Authenticated user'
+weight: 1
+is_admin: false
+permissions:
+  - 'access comments'
+  - 'access content'
+  - 'access shortcuts'
+  - 'access site-wide contact form'
+  - 'post comments'
+  - 'restful get update_ethereum_address'
+  - 'restful get validate_ethereum_account'
+  - 'search content'
+  - 'skip comment approval'
+  - 'use text format basic_html'

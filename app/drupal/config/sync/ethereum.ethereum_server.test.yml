@@ -1,0 +1,9 @@
+uuid: 395f55d7-310b-4866-b657-12f2e78a8ae5
+langcode: en
+status: true
+dependencies: {  }
+id: test
+label: Test
+description: 'Another Test'
+url: 'http://localhost:8545'
+network_id: '*'

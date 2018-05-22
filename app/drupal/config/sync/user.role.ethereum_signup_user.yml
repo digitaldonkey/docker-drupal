@@ -1,0 +1,11 @@
+uuid: 978ebb94-5740-4b49-8666-5ebb99bb9c04
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: NVF9aRwmFNtDPyexJR9pq38TLROsJQKigRn4LroDihM
+id: ethereum_signup_user
+label: 'Etherum signup authorized user'
+weight: 3
+is_admin: null
+permissions: {  }

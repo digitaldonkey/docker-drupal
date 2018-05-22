@@ -1,0 +1,14 @@
+uuid: 54322cd0-91eb-48f3-b760-3c236b928771
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.ethereum_signup_user
+  module:
+    - user
+id: user_remove_role_action.ethereum_signup_user
+label: 'Remove the Etherum signup authorized user role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: ethereum_signup_user

@@ -1,0 +1,11 @@
+uuid: 3bcda163-dd78-44ad-b7ce-df39bcb92694
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: iC4rL4EmLlYpEQmsODrEHBAbRXYX_eUXdJMoOaJXXXc
+id: authorized_ethereum_user
+label: 'Authorized Ethereum User'
+weight: 3
+is_admin: null
+permissions: {  }

@@ -1,0 +1,14 @@
+uuid: 2d562bf1-ea42-4657-a6f7-dac96eb8e5c8
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.authorized_ethereum_user
+  module:
+    - user
+id: user_add_role_action.authorized_ethereum_user
+label: 'Add the Authorized Ethereum User role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: authorized_ethereum_user

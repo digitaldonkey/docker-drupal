@@ -1,0 +1,10 @@
+uuid: be4b0803-4c5d-42f8-a3ba-d51219fe64c1
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: egk1xK2IBzVVzlUEa5-DUQaIck1gs3fuvfpjcBQfdIY
+id: mascara
+label: 'Metamask Mascara'
+jsFilePath: mascara/built/mascara.js
+cssFilePath: mascara/css/styles.css

@@ -1,0 +1,19 @@
+uuid: 2052b96a-76bb-4f01-99b7-0717ab72027f
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_signup
+    - serialization
+    - user
+_core:
+  default_config_hash: 9tWqVrXtdDrBnyxH9x6ILGY9SlifJoIrOdG24El8OH4
+id: ethereum_signup_auth
+plugin_id: ethereum_signup_auth
+granularity: method
+configuration:
+  POST:
+    supported_formats:
+      - json
+    supported_auth:
+      - cookie

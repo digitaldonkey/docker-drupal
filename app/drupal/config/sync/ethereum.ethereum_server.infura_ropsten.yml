@@ -1,0 +1,11 @@
+uuid: 4c53385d-60f7-4021-8e96-953e1777a216
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 2MfLUgwnJ_nsN1z0CmX1OCULGLV8ex9CgUwz0o6Hm6k
+id: infura_ropsten
+label: 'Infura Ropsten Test Node'
+description: 'Infura (https://www.infura.io) provides access to Ethereum Nodes, so that you don''t require to host you own.'
+url: 'https://ropsten.infura.io/drupal'
+network_id: '3'

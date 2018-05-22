@@ -1,0 +1,11 @@
+uuid: a00947ab-1f6e-4693-a4b3-b34e2f9f4af8
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: e2qpXr2oaeeU_BZo4tAu24rYNnYJPEr9E6qNQG8Nktc
+id: infura_kovan
+label: 'Infura Kovan Test Node'
+description: 'Infura (https://www.infura.io) provides access to Ethereum Nodes, so that you don''t require to host you own.'
+url: 'https://kovan.infura.io/drupal'
+network_id: '42'

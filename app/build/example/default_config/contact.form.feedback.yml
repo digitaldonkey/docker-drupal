@@ -1,0 +1,14 @@
+uuid: be91feb9-9a9c-4199-89cd-8f5983ebdc0a
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: vymHlgJy26BuI5GGj9-IXjwR3dRC5C0tij4BpWJnoqw
+id: feedback
+label: 'Website feedback'
+recipients:
+  - email@donkeymedia.eu
+reply: ''
+weight: 0
+message: 'Your message has been sent.'
+redirect: ''
