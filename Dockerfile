@@ -9,7 +9,7 @@ ARG MYSQL_ROOT_PASSWORD
 ENV MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
 
 # Switch Drupal composer install ('stable') or github version ('dev').
-ARG BUILD_ENVIRONMENT
+ARG BUILD_ENVIRONMENT=example
 ENV BUILD_ENVIRONMENT=$BUILD_ENVIRONMENT
 
 # Install PHP extensions and PECL modules.
@@ -79,10 +79,10 @@ RUN mkdir -p /opt/local/bin && \
     wget https://github.com/gvanas/KeccakCodePackage/archive/master.tar.gz && \
     tar xvf master.tar.gz && \
     rm master.tar.gz && \
-    cd KeccakCodePackage-master && \
+    cd XKCP-master && \
     make generic64/KeccakSum && \
     mv bin/generic64/KeccakSum ../bin/keccac && \
-    rm -rf KeccakCodePackage-master master.tar.gz
+    rm -rf XKCP-master master.tar.gz
 
 
 # NODE & NPM - Install PHP 7 Repo
