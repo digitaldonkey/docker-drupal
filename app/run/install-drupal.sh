@@ -1,5 +1,10 @@
 #/bin/bash
 
+source /var/www/drupal/build-env
+
+echo "### USING BUILD_ENVIRONMENT:  ${BUILD_ENVIRONMENT}"
+
+
 # This fixes a bug
 # See https://github.com/drush-ops/drush/issues/3456
 rm -rf  /var/www/drupal/drush
@@ -24,8 +29,10 @@ cd /var/www/drupal/web && /var/www/drupal/vendor/bin/drush cr
 
 
 # Load default_config into sync folder & reset config.
-if test "$(ls -A /var/www/drupal/default_config)"; then
-    echo "## Found config in /var/www/drupal/default_config <##"
+IMPORT_FILES=`ls -1 /var/www/drupal/default_config/*.yml 2>/dev/null | wc -l`
+if [ $IMPORT_FILES != 0 ]
+then
+    echo "### Found config in /var/www/drupal/default_config"
      cp /var/www/drupal/default_config/*.yml /var/www/drupal/config/sync/
      chown -R drupal:www-data /var/www/drupal/config
     # Import config
@@ -39,5 +46,7 @@ fi
 # Fix sync permissions.
 chown -R drupal:www-data /var/www/drupal/config/sync/
 chmod 775 /var/www/drupal/config/sync/
+
+su drupal -c 'cd /var/www/drupal/web && /var/www/drupal/vendor/bin/drush cr'
 
 exec "$@"

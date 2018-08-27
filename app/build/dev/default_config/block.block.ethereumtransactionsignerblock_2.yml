@@ -1,0 +1,26 @@
+uuid: 18a705d1-5ff6-4ca3-99c7-4dcf3bdf5743
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_txsigner
+    - system
+  theme:
+    - seven
+id: ethereumtransactionsignerblock_2
+theme: seven
+region: content
+weight: 0
+provider: null
+plugin: txsigner_block
+settings:
+  id: txsigner_block
+  label: 'Ethereum transaction signer Block'
+  provider: ethereum_txsigner
+  label_display: '0'
+visibility:
+  request_path:
+    id: request_path
+    pages: '/user/*/edit'
+    negate: false
+    context_mapping: {  }

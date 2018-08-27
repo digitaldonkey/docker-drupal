@@ -30,7 +30,8 @@ Start up containers
 docker-compose build
 docker-compose up
 ```
-Visit [http://dockerhost:8888](http://dockerhost:8888) or [https://dockerhost:8889](https://dockerhost:8889).
+
+After Drupal install finished visit [http://dockerhost:8888](http://dockerhost:8888) or [https://dockerhost:8889](https://dockerhost:8889).
 
 Not that if you change `MYSQL_ROOT_PASSWORD` after first `docker-composer up` run you may need to recreate the Database server (`docker-compose rm -v`). 
 

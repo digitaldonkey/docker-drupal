@@ -1,9 +1,0 @@
-uuid: ce55b6b5-fddd-45d6-96c9-9716df34c2ad
-langcode: en
-status: true
-dependencies: {  }
-id: truffle_develop
-label: 'Truffle Develop'
-description: 'Truffle develop testrpc'
-url: 'http://127.0.0.1:9545'
-network_id: '*'

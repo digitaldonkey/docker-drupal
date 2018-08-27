@@ -4,9 +4,6 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.user.full
-    - field.field.user.user.field_ethereum_account_status
-    - field.field.user.user.field_ethereum_address
-    - field.field.user.user.field_ethereum_drupal_hash
     - field.field.user.user.user_picture
     - image.style.thumbnail
   module:
@@ -31,7 +28,4 @@ content:
       image_link: content
     third_party_settings: {  }
     label: hidden
-hidden:
-  field_ethereum_account_status: true
-  field_ethereum_address: true
-  field_ethereum_drupal_hash: true
+hidden: {  }

@@ -13,6 +13,18 @@
         {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "ethereum/web3.js",
+                "version": "1.0.0-beta.35",
+                "type": "drupal-library",
+                "dist": {
+                    "url": "https://github.com/ethereum/web3.js/archive/v1.0.0-beta.35.zip",
+                    "type": "zip"
+                }
+            }
         }
     ],
     "require": {
@@ -24,7 +36,7 @@
         "drupal/console": "~1.0",
         "drupal/admin_toolbar": "^1.18",
         "drupal/ethereum": "dev-1.x",
-        "drupal/restui": "^1.13",
+        "drupal/restui": "^1.15",
         "drupal/externalauth": "^1.0"
     },
     "require-dev": {

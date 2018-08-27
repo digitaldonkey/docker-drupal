@@ -1,0 +1,18 @@
+uuid: 3c25493c-1399-4b92-b4e8-99af965f5d05
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_smartcontract
+    - serialization
+    - user
+id: event_processor
+plugin_id: event_processor
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - cookie

@@ -1,2 +1,3 @@
 *.sublime-*
 .env
+app/drupal/config/sync/*.yml

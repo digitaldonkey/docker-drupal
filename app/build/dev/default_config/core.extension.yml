@@ -17,7 +17,6 @@ module:
   dynamic_page_cache: 0
   editor: 0
   ethereum: 0
-  ethereum_signup: 0
   ethereum_smartcontract: 0
   ethereum_txsigner: 0
   ethereum_user_connector: 0
@@ -38,6 +37,7 @@ module:
   quickedit: 0
   rdf: 0
   rest: 0
+  restui: 0
   search: 0
   serialization: 0
   shortcut: 0

@@ -47,6 +47,7 @@ RUN buildDeps=" \
         libxml2-dev \
         libzip-dev \
         zip \
+        unzip \
         libgmp-dev \
         zlib1g-dev \
         libxslt-dev \
@@ -102,8 +103,7 @@ RUN apt-get purge -y --auto-remove $buildDeps && rm -r /var/lib/apt/lists/* && a
 
 # Link Composer
 # @see https://github.com/docker-library/php/issues/344#issuecomment-364843883
-COPY --from=composer:1.5 /usr/bin/composer /usr/bin/composer
-
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Setup SSH.
 # Both users (root, drupal) are only allowed to login with key in app/ssh/authorized_keys.
@@ -117,33 +117,6 @@ RUN chown root:root /root/.ssh/* && chmod 600 /root/.ssh/*
 
 # Setup PHP.
 
-# RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php/apache2/php.ini
-# RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php5/cli/php.ini
-
-# Setup Blackfire.
-# Get the sources and install the Debian packages.
-# We create our own start script. If the environment variables are set, we
-# simply start Blackfire in the foreground. If not, we create a dummy daemon
-# script that simply loops indefinitely. This is to trick Supervisor into
-# thinking the program is running and avoid unnecessary error messages.
-
-# RUN wget -O - https://packagecloud.io/gpg.key | apt-key add -
-# RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
-# RUN apt-get update
-# RUN apt-get install -y blackfire-agent blackfire-php
-# RUN echo '#!/bin/bash\n\
-# if [[ -z "$BLACKFIREIO_SERVER_ID" || -z "$BLACKFIREIO_SERVER_TOKEN" ]]; then\n\
-#     while true; do\n\
-#         sleep 1000\n\
-#     done\n\
-# else\n\
-#     /usr/bin/blackfire-agent -server-id="$BLACKFIREIO_SERVER_ID" -server-token="$BLACKFIREIO_SERVER_TOKEN"\n\
-# fi\n\
-# ' > /usr/local/bin/launch-blackfire
-# RUN chmod +x /usr/local/bin/launch-blackfire
-# RUN mkdir -p /var/run/blackfire
-
-
 # Setup Apache.
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
 RUN sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
@@ -156,21 +129,6 @@ RUN sed -i '1s/^/ServerName localhost\n/' /etc/apache2/apache2.conf && \
     a2enmod rewrite && \
     a2enmod ssl && \
     a2ensite default-ssl.conf
-
-
-# Setup Supervisor.
-
-# RUN echo '[program:apache2]\ncommand=/bin/bash -c "source /etc/apache2/envvars && exec /usr/sbin/apache2 -DFOREGROUND"\nautorestart=true\n\n' >> /etc/supervisor/supervisord.conf
-# RUN echo '[program:mysql]\ncommand=/usr/bin/pidproxy /var/run/mysqld/mysqld.pid /usr/sbin/mysqld\nautorestart=true\n\n' >> /etc/supervisor/supervisord.conf
-# RUN echo '[program:sshd]\ncommand=/usr/sbin/sshd -D\n\n' >> /etc/supervisor/supervisord.conf
-# RUN echo '[program:blackfire]\ncommand=/usr/local/bin/launch-blackfire\n\n' >> /etc/supervisor/supervisord.conf
-# RUN echo '[program:cron]\ncommand=cron -f\nautorestart=false \n\n' >> /etc/supervisor/supervisord.conf
-
-# Setup XDebug.
-
-# RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/apache2/conf.d/20-xdebug.ini
-# RUN echo "xdebug.max_nesting_level = 300" >> /etc/php5/cli/conf.d/20-xdebug.ini
-
 
 # Add user "drupal"
 RUN rm -rf /var/www && \
@@ -189,23 +147,22 @@ RUN chmod 700 /var/www/.ssh/ && chown 600 /var/www/.ssh/* && chown -R drupal:dru
 RUN printf "[client] \nuser=root \npassword=$MYSQL_ROOT_PASSWORD \nhost=mysql \nprotocol=tcp \nport=3306 \n" > /var/www/.my.cnf
 
 
-# Composer speedup.
-RUN su drupal -c "/usr/bin/composer global require hirak/prestissimo"
+# RUN mkdir /tmp/www && chown drupal:drupal /tmp/www && chmod g+w /tmp/www
 
-# Install Drupal Console.
-# RUN curl https://drupalconsole.com/installer -L -o /usr/bin/drupal && \
-#     chmod +x /usr/bin/drupal && \
-#     su drupal -c "/usr/bin/drupal init --yes --no-interaction --destination /var/www/.console/ --autocomplete && \
-#     echo 'source /var/www/bin/.console/console.rc' >> /var/www/.bashrc"
-# Not working ?
-# Should use: /var/www/drupal/vendor/bin/drupal
-# https://github.com/hechoendrupal/drupal-console/issues/3255#issuecomment-292556584
+# Composer speedup.
+RUN mkdir -p /var/www/.composer/cache && chown -R drupal:drupal /var/www/.composer
+
+
+RUN su drupal -c "COMPOSER_DISABLE_XDEBUG_WARN=1 && /usr/bin/composer global require hirak/prestissimo"
+
+# Add link to Drupal console, drush ...
+RUN echo "PATH=$PATH:/var/www/drupal/vendor/bin" >> /var/www/.bashrc
 
 # Composer install for Drupal.
 RUN su drupal -c  "/usr/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
 
 # We will use composer.json and composer.lock as provided.
-RUN echo "USING ENVIRONMENT ${BUILD_ENVIRONMENT}" && touch /var/www/drupal/build-env--${BUILD_ENVIRONMENT}
+RUN echo "USING ENVIRONMENT ${BUILD_ENVIRONMENT}" && echo "BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT}" > /var/www/drupal/build-env
 COPY app/build/${BUILD_ENVIRONMENT}/composer.* /var/www/drupal/.
 
 # Scaffold
@@ -219,6 +176,10 @@ RUN cd  /var/www/drupal/web/sites/default/ && \
     mkdir drupal/config/sync -p && \
     mkdir drupal/web/themes/contrib -p && \
     mkdir drupal/web/profiles/contrib -p
+
+# Enable debugging if environment is "dev"
+RUN if [ "x${BUILD_ENVIRONMENT}" = "xdev" ] ; then cp /var/www/drupal/web/sites/example.settings.local.php /var/www/drupal/web/sites/default/settings.local.php; fi
+
 
 # Copy config
 COPY app/build/${BUILD_ENVIRONMENT}/default_config /var/www/drupal/default_config

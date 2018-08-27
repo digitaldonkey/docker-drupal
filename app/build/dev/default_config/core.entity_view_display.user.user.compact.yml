@@ -26,4 +26,7 @@ content:
     third_party_settings: {  }
     label: hidden
 hidden:
+  field_ethereum_account_status: true
+  field_ethereum_address: true
+  field_ethereum_drupal_hash: true
   member_for: true

@@ -1,4 +1,4 @@
-uuid: f5462b1b-2485-49f5-a1b1-90067e451d78
+uuid: f01d94ec-a7a0-40fc-aff3-8eda0fa4416a
 langcode: en
 status: true
 dependencies:
@@ -7,9 +7,9 @@ dependencies:
     - serialization
     - user
 _core:
-  default_config_hash: 7PFB832-sBrIaY5BN3nqfgqqkGjVm_FaQ7vwwMIFEhU
-id: validate_ethereum_account
-plugin_id: validate_ethereum_account
+  default_config_hash: 7oROuLR8LwzoevdMj5roVFW_aTOKLRM2FHKk7qB_TQk
+id: update_ethereum_address
+plugin_id: update_ethereum_address
 granularity: method
 configuration:
   GET:

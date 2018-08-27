@@ -21,6 +21,18 @@
         {
             "type": "git",
             "url": "https://github.com/digitaldonkey/ethereum-php.git"
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "ethereum/web3.js",
+                "version": "1.0.0-beta.35",
+                "type": "drupal-library",
+                "dist": {
+                    "url": "https://github.com/ethereum/web3.js/archive/v1.0.0-beta.35.zip",
+                    "type": "zip"
+                }
+            }
         }
     ],
     "require": {
@@ -31,9 +43,9 @@
         "drush/drush": "~8.0",
         "drupal/console": "~1.0",
         "drupal/admin_toolbar": "^1.18",
-        "drupal/ethereum": "dev-feature-ethereum_signup",
-        "drupal/restui": "^1.13",
-        "drupal/externalauth": "^1.0"
+        "drupal/ethereum": "dev-8.x-1.x",
+        "drupal/externalauth": "^1.0",
+        "drupal/restui": "^1.15"
     },
     "require-dev": {
         "behat/mink": "~1.7",
