@@ -1,0 +1,22 @@
+uuid: 9f353ad5-d55e-4bfc-b3b2-0a1dc1f2097e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_ethereum_drupal_hash
+  module:
+    - user
+_core:
+  default_config_hash: Ot5YXFKzzClH7qD7a-tQ_4qypkZWSpGRbHukcs3ueU8
+id: user.user.field_ethereum_drupal_hash
+field_name: field_ethereum_drupal_hash
+entity_type: user
+bundle: user
+label: 'Drupal Ethereum account validation hash'
+description: 'This is a hidden field containing a hash created on a Ethereum Address submission. The Ethereum user will submit this hash to the login smart contract to prove that he has the private key to this address.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,7 +1,6 @@
 #/bin/bash
 
-source /var/www/drupal/build-env
-
+BUILD_ENVIRONMENT=$(cat /var/www/drupal/.build-env)
 echo "### USING BUILD_ENVIRONMENT:  ${BUILD_ENVIRONMENT}"
 
 
@@ -29,23 +28,22 @@ cd /var/www/drupal/web && /var/www/drupal/vendor/bin/drush cr
 
 
 # Load default_config into sync folder & reset config.
-IMPORT_FILES=`ls -1 /var/www/drupal/default_config/*.yml 2>/dev/null | wc -l`
+SYNC_DIR="/var/www/drupal/config/${BUILD_ENVIRONMENT}/default_config"
+IMPORT_FILES=`ls -1 ${SYNC_DIR}/*.yml 2>/dev/null | wc -l`
 if [ $IMPORT_FILES != 0 ]
 then
-    echo "### Found config in /var/www/drupal/default_config"
-     cp /var/www/drupal/default_config/*.yml /var/www/drupal/config/sync/
-     chown -R drupal:www-data /var/www/drupal/config
+    echo "### Found config in ${SYNC_DIR}"
     # Import config
     cd /var/www/drupal/
-    su drupal -c '/var/www/drupal/vendor/bin/drupal \
+    su drupal -c "/var/www/drupal/vendor/bin/drupal \
      --no-interaction \
      --root=/var/www/drupal/web config:import \
-     --directory=/var/www/drupal/config/sync'
+     --directory=${SYNC_DIR}"
 fi
 
 # Fix sync permissions.
-chown -R drupal:www-data /var/www/drupal/config/sync/
-chmod 775 /var/www/drupal/config/sync/
+chown -R drupal:www-data /var/www/drupal/config
+chmod 775 /var/www/drupal/config
 
 su drupal -c 'cd /var/www/drupal/web && /var/www/drupal/vendor/bin/drush cr'
 

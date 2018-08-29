@@ -1,0 +1,20 @@
+uuid: b7e1a677-c8bd-427b-b65b-0868e99fdd98
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_signup
+    - serialization
+    - user
+_core:
+  default_config_hash: YAa4pIBeekY0eo5Pn-z_5JwNZjnTTTEmiYmUn5zk9KA
+id: ethereum_signup_verify
+plugin_id: ethereum_signup_verify
+granularity: resource
+configuration:
+  methods:
+    - POST
+  formats:
+    - json
+  authentication:
+    - cookie

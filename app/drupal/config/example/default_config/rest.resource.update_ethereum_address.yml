@@ -1,0 +1,19 @@
+uuid: f01d94ec-a7a0-40fc-aff3-8eda0fa4416a
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_user_connector
+    - serialization
+    - user
+_core:
+  default_config_hash: 7oROuLR8LwzoevdMj5roVFW_aTOKLRM2FHKk7qB_TQk
+id: update_ethereum_address
+plugin_id: update_ethereum_address
+granularity: method
+configuration:
+  GET:
+    supported_formats:
+      - json
+    supported_auth:
+      - cookie

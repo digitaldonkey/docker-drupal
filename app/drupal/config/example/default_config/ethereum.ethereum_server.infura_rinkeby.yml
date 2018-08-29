@@ -1,0 +1,11 @@
+uuid: 9a5c77db-52a7-4241-8fbf-8ab6cee52964
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: kNdFbc1i3Kukuu_SQhvM72KBOryAMhiq8dEQOO_Xb0Q
+id: infura_rinkeby
+label: 'Infura Rinkeby Test Node'
+description: 'Infura (https://www.infura.io) provides access to Ethereum Nodes, so that you don''t require to host you own.'
+url: 'https://rinkeby.infura.io/drupal'
+network_id: '4'

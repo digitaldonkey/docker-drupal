@@ -764,4 +764,3 @@ if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 }
 $conf['file_temporary_path'] = '/tmp';
 $settings['file_private_path'] = '../files_private';
-$config_directories[CONFIG_SYNC_DIRECTORY] = '../config/sync';

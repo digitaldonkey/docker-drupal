@@ -1,0 +1,20 @@
+uuid: 93da3fde-1bc9-41bc-bf22-9f31874a8991
+langcode: en
+status: true
+dependencies:
+  module:
+    - ethereum_txsigner
+  theme:
+    - bartik
+id: ethereumtransactionsignerblock
+theme: bartik
+region: content
+weight: 0
+provider: null
+plugin: txsigner_block
+settings:
+  id: txsigner_block
+  label: 'Ethereum transaction signer Block'
+  provider: ethereum_txsigner
+  label_display: '0'
+visibility: {  }

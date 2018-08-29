@@ -1,0 +1,34 @@
+uuid: 18f47ae5-eee3-48f3-a2e8-3094e068257c
+langcode: en
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:d10d0165-3ca4-4387-b661-368b8abf4ddc'
+  module:
+    - block_content
+    - user
+  theme:
+    - bartik
+id: ablockforethereumusersonly
+theme: bartik
+region: content
+weight: 0
+provider: null
+plugin: 'block_content:d10d0165-3ca4-4387-b661-368b8abf4ddc'
+settings:
+  id: 'block_content:d10d0165-3ca4-4387-b661-368b8abf4ddc'
+  label: 'A Block for Ethereum Users only'
+  provider: block_content
+  label_display: '0'
+  status: true
+  info: ''
+  view_mode: full
+visibility:
+  user_role:
+    id: user_role
+    roles:
+      authorized_ethereum_user: authorized_ethereum_user
+      ethereum_signup_user: ethereum_signup_user
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'

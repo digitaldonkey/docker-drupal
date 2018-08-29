@@ -1,0 +1,11 @@
+uuid: f0f44132-7289-4d2a-99c0-d4ae6b843e88
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: jlaz5pVbivJN5Rzbo3CD1OW6D3yfYpAoA2vF6Ph-nnM
+id: docker
+label: 'Docker development'
+description: 'TestRPC docker (nice for persistent test-chains https://github.com/digitaldonkey/ganache-cli-docker-compose)'
+url: 'http://192.168.99.100:8545'
+network_id: '5777'

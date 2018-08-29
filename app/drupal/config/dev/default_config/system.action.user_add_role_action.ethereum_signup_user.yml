@@ -1,0 +1,14 @@
+uuid: c9990a91-53b9-4341-91c8-63935afb91e8
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.ethereum_signup_user
+  module:
+    - user
+id: user_add_role_action.ethereum_signup_user
+label: 'Add the Etherum signup authorized user role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: ethereum_signup_user

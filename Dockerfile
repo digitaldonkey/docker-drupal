@@ -161,8 +161,10 @@ RUN echo "PATH=$PATH:/var/www/drupal/vendor/bin" >> /var/www/.bashrc
 # Composer install for Drupal.
 RUN su drupal -c  "/usr/bin/composer create-project drupal-composer/drupal-project:~8.0 /var/www/drupal --stability dev --no-interaction --no-install"
 
+# Environment Vars
+RUN echo "USING ENVIRONMENT ${BUILD_ENVIRONMENT}" && echo "${BUILD_ENVIRONMENT}" > /var/www/drupal/.build-env
+
 # We will use composer.json and composer.lock as provided.
-RUN echo "USING ENVIRONMENT ${BUILD_ENVIRONMENT}" && echo "BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT}" > /var/www/drupal/build-env
 COPY app/build/${BUILD_ENVIRONMENT}/composer.* /var/www/drupal/.
 
 # Scaffold
@@ -173,7 +175,6 @@ RUN cd  /var/www/drupal/web/sites/default/ && \
     cd  /var/www && \
     mkdir drupal/files_private -p && \
     mkdir drupal/web/modules/contrib -p && \
-    mkdir drupal/config/sync -p && \
     mkdir drupal/web/themes/contrib -p && \
     mkdir drupal/web/profiles/contrib -p
 
@@ -181,8 +182,10 @@ RUN cd  /var/www/drupal/web/sites/default/ && \
 RUN if [ "x${BUILD_ENVIRONMENT}" = "xdev" ] ; then cp /var/www/drupal/web/sites/example.settings.local.php /var/www/drupal/web/sites/default/settings.local.php; fi
 
 
-# Copy config
-COPY app/build/${BUILD_ENVIRONMENT}/default_config /var/www/drupal/default_config
+# Configuration
+# Add config import directory to settings
+# $config_directories[CONFIG_SYNC_DIRECTORY] = '../config/${BUILD_ENVIRONMENT}/default_config';
+RUN echo "\$config_directories[CONFIG_SYNC_DIRECTORY] = '../config/${BUILD_ENVIRONMENT}/default_config';\n" >> /var/www/drupal/web/sites/default/settings.php
 
 # Set up permissions
 RUN cd /var/www && \

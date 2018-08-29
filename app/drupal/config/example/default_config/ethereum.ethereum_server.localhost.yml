@@ -1,0 +1,11 @@
+uuid: 6a7c10ab-f9e8-4366-903b-cc323ddc3e96
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: yzIwiBsOo9Os49KDn8ORTuPvprZcqtP7biECocBQxm4
+id: localhost
+label: Localhost
+description: 'Local Ethereum client like Geth or Parity on port 8545.'
+url: 'http://localhost:8545'
+network_id: '*'
