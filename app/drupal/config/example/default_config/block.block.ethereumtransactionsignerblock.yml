@@ -4,6 +4,7 @@ status: true
 dependencies:
   module:
     - ethereum_txsigner
+    - system
   theme:
     - bartik
 id: ethereumtransactionsignerblock
@@ -17,4 +18,9 @@ settings:
   label: 'Ethereum transaction signer Block'
   provider: ethereum_txsigner
   label_display: '0'
-visibility: {  }
+visibility:
+  request_path:
+    id: request_path
+    pages: "<front>\r\n/user/register\r\n/user/login\r\n/user/*/edit"
+    negate: false
+    context_mapping: {  }

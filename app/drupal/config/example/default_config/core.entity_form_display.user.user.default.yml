@@ -32,17 +32,10 @@ content:
       size: 42
       placeholder: '0xaec98826319ef42aab9530a23306d5a9b113e23d'
     third_party_settings: {  }
-  field_ethereum_drupal_hash:
-    type: string_textfield
-    weight: 2
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
 hidden:
   account: true
   contact: true
+  field_ethereum_drupal_hash: true
   language: true
   timezone: true
   user_picture: true

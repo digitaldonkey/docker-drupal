@@ -62,4 +62,5 @@ The disk hosting /var/www/.composer is full, this may be the cause of the follow
 ```
 
 You can fix it with `docker images prune` and then rebuild images.
+Or sometimes https://stackoverflow.com/a/37329484/308533
 
